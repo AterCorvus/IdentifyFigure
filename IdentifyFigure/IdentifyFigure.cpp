@@ -11,8 +11,10 @@
 
 #define Matrix vector<vector<char>>
 
+// Читаем файл по указанному пути
 Matrix ReadFile( const string& file_path )
 {
+	// Необходим, что-бы даже в случае ошибки, усмпешно закрыть поток чтения
 	class File_Strm
 	{
 		public:
@@ -33,6 +35,7 @@ Matrix ReadFile( const string& file_path )
 	if( !file_strm.fileStrm.is_open() )
 		throw;
 
+	// посимвольно читаем файл, построчно сохраняя его в вектор
 	Matrix matrix;
 	vector<char> vector; 
 	char value = 0;
@@ -51,6 +54,7 @@ Matrix ReadFile( const string& file_path )
 	return matrix;
 }
 
+// в изображении ищем фигуру и сохраяем в формате линий, отсеиваем шум
 vector<Line> FindLines( Matrix& picture )
 {
 	vector<Line> figure;
@@ -82,6 +86,7 @@ vector<Line> FindLines( Matrix& picture )
 	return figure;
 }
 
+// Проверяем не квадрат ли это
 bool IsSquare( vector<Line>& figure )
 {
 	int count = 0;
@@ -105,34 +110,58 @@ bool IsSquare( vector<Line>& figure )
 	return true;
 }
 
+int GetLineMiddle( Line& line )
+{
+	Coordinate first_line_begins = line.GetLineBegins();
+	const int middle_column = first_line_begins.columnNumber + ceill( ( line.GetLineSize() / 2 ) - 1 );
+	return middle_column;
+}
+
+// Проверяем не круг ли это
 bool IsCircle( vector<Line>& figure )
 {
 	const int line_numb = figure.size();
 	const int half_line_numb = ceill( line_numb / 2 );
-
-   Coordinate middle_coord = figure[0].GetLineBegins();
-	middle_coord.columnNumber = middle_coord.columnNumber + ceill( ( figure[0].GetLineSize() / 2 ) - 1 );
-
+	const int middle_colum = GetLineMiddle( figure[0] );
 	int longest_line = 0;
-	for( int count = 0; count < line_numb; ++count )
+	int area = 0;
+	for( int count = 0; count <= half_line_numb; ++count )
 	{
+		// обрабатываем линию с начала
 		const int line_size = figure[count].GetLineSize();
+		if( line_size != figure[line_numb - count - 1].GetLineSize(); )
+			return false;
+
+		const int line_middle_column_from_beg = GetLineMiddle( figure[count] );
+		if( line_middle_column_from_beg != middle_colum )
+			return false;
+
+		if( line_size >= figure[count + 1].GetLineSize() )
+			return false;
+
+		// обрабатываем линию с конца
+		const int line_middle_loumn_from_end = GetLineMiddle( figure[line_numb - count - 1] );
+		if( line_middle_loumn_from_end != middle_colum )
+			return false;
+
+	   if( line_size <= figure[line_numb - count - 2].GetLineSize() )
+			return false;
+
+		// сравниваем обе
 		if( line_size > longest_line )
 		{
 			longest_line = line_size;
 		}
 
-		if( ( count < half_line_numb ) && ( line_size > figure[count + 1].GetLineSize() ) )
-		{
-			return false;
-		}
-		else if( ( count >= half_line_numb ) && ( line_size < figure[count - 1].GetLineSize() ) )
-		{
-			return false;
-		}
+		area =+ line_size;
 	}
+	if( area != ceil( ( 3,14 * ( longest_line * longest_line ) ) / 4 ))
+		return false;
+
+	return false;
 }
 
+// Идентифицируем фугуру по изображения
 shared_ptr<Figure> IdentifyFigure( Matrix& picture )
 {
 	shared_ptr<Figure> figure_ptr;
