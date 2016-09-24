@@ -14,7 +14,7 @@
 // Читаем файл по указанному пути
 Matrix ReadFile( const string& file_path )
 {
-	// Необходим, что-бы даже в случае ошибки, усмпешно закрыть поток чтения
+	// Необходим, что бы даже в случае ошибки, усмпешно закрылся поток чтения
 	class File_Strm
 	{
 		public:
@@ -32,10 +32,11 @@ Matrix ReadFile( const string& file_path )
 	};
 
 	File_Strm file_strm( file_path );
+	// TODO релаизовать адекватный вывод ошибок
 	if( !file_strm.fileStrm.is_open() )
 		throw;
 
-	// посимвольно читаем файл, построчно сохраняя его в вектор
+	// Посимвольно читаем файл, построчно сохраняя его в вектор
 	Matrix matrix;
 	vector<char> vector; 
 	char value = 0;
@@ -43,10 +44,12 @@ Matrix ReadFile( const string& file_path )
 	{
 		if( value != '\n' )
 		{
+			// Сохраняем символ в строку
 			vector.push_back( value );
 		}
 		else
 		{
+			// строку в матрицу
 			matrix.push_back( vector );
 		}
 	}
@@ -54,29 +57,36 @@ Matrix ReadFile( const string& file_path )
 	return matrix;
 }
 
-// в изображении ищем фигуру и сохраяем в формате линий, отсеиваем шум
+// Внутри изображения ищем линии и сохряняем, отсеиваем шум
 vector<Line> FindLines( Matrix& picture )
 {
 	vector<Line> figure;
 	int line_numb = 0;
+	// Перебираем строки
 	for( Matrix::iterator pic_it = picture.begin(); pic_it != picture.end(); ++pic_it )
 	{
 		int column_numb = 0;
 		int dot_in_row = 0;
 		vector<char>& pic_line = *pic_it;
+		// Перебираем символы внутри строки
 		for( vector<char>::iterator pic_line_it = pic_line.begin(); pic_line_it != pic_line.end(); ++pic_line_it )
 		{
 			if( *pic_line_it == '1' )
 			{
 				++dot_in_row;
 			}
-			else if( *pic_line_it == '0' && dot_in_row > 1 )
+			else if( *pic_line_it == '0' )
 			{
-				Coordinate line_begins;
-				line_begins.columnNumber = column_numb - dot_in_row;
-				line_begins.lineNumber = line_numb;
-				Line figure_line( line_begins, dot_in_row );
-				figure.push_back( figure_line );
+				if( dot_in_row > 1 )
+				{
+					Coordinate line_begins;
+					line_begins.columnNumber = column_numb - dot_in_row;
+					line_begins.lineNumber = line_numb;
+					Line figure_line( line_begins, dot_in_row );
+					figure.push_back( figure_line );
+				}
+
+				dot_in_row = 0;
 			}
 			++column_numb;
 		}
@@ -110,11 +120,11 @@ bool IsSquare( vector<Line>& figure )
 	return true;
 }
 
+// Получить позицию центральной точки линии, с округлением в большую сторону
 int GetLineMiddle( Line& line )
 {
 	Coordinate first_line_begins = line.GetLineBegins();
-	const int middle_column = first_line_begins.columnNumber + ceill( ( line.GetLineSize() / 2 ) - 1 );
-	return middle_column;
+	return first_line_begins.columnNumber + ceill( ( line.GetLineSize() / 2 ) - 1 );
 }
 
 // Проверяем не круг ли это
@@ -127,38 +137,52 @@ bool IsCircle( vector<Line>& figure )
 	int area = 0;
 	for( int count = 0; count <= half_line_numb; ++count )
 	{
-		// обрабатываем линию с начала
+		// Обрабатываем линию с начала
 		const int line_size = figure[count].GetLineSize();
+
+		// Проверяем симетричность линий с начала и конца
 		if( line_size != figure[line_numb - count - 1].GetLineSize(); )
 			return false;
 
+		// Проверяем, что линия находится в центре фигуры
 		const int line_middle_column_from_beg = GetLineMiddle( figure[count] );
 		if( line_middle_column_from_beg != middle_colum )
 			return false;
 
+		// Проверяем, что линия больше или равна следующей
 		if( line_size >= figure[count + 1].GetLineSize() )
 			return false;
 
-		// обрабатываем линию с конца
+		// Обрабатываем линию с конца
 		const int line_middle_loumn_from_end = GetLineMiddle( figure[line_numb - count - 1] );
+
+		// Проверяем, что линия находится в центре фигуры
 		if( line_middle_loumn_from_end != middle_colum )
 			return false;
 
+		// Проверяем, что ли меньше или равна предыдущей
 	   if( line_size <= figure[line_numb - count - 2].GetLineSize() )
 			return false;
 
-		// сравниваем обе
+		// Ищем самую длинную линию
 		if( line_size > longest_line )
 		{
 			longest_line = line_size;
 		}
 
-		area =+ line_size;
+		// Вычисляем реальную площадь
+		area =+ line_size * 2;
 	}
-	if( area != ceil( ( 3,14 * ( longest_line * longest_line ) ) / 4 ))
+
+	// Проверяем, что высота равна ширине
+	if( longest_line != line_numb )
 		return false;
 
-	return false;
+	// Пока, что не актуально введу когда появятся верятность правильного распознавания
+   /*const int real_area = ceil( ( 3,14 * ( longest_line * longest_line ) ) / 4 );
+		return false;*/
+
+	return true;
 }
 
 // Идентифицируем фугуру по изображения
@@ -172,12 +196,12 @@ shared_ptr<Figure> IdentifyFigure( Matrix& picture )
 
 	if( IsSquare )
 	{
-		figure_ptr = new Sqare();
+		figure_ptr = new Sqare( figure );
 		return figure_ptr;
 	}
 	else if( IsCircle )
 	{
-		figure_ptr = new Circle();
+		figure_ptr = new Circle( figure );
 		return figure_ptr;
 	}
 	else
@@ -195,6 +219,30 @@ int main()
 	{
 		Matrix picture = ReadFile( file_path );
 		shared_ptr<Figure> figure = IdentifyFigure( picture );
+		if( figure != nullptr )
+		{
+			FigureType figure_type = figure->GetType();
+			switch ( figure_type )
+			{
+				case FT_SQARE:
+				{
+					break;
+				}
+				case FT_CIRCLE:
+				{
+					break;
+				}
+				default:
+				{
+					cout << "Неизвестная фигура";
+					break;
+				}
+			}
+		}
+		else
+		{
+			cout << "Неизвестная фигура."
+		}
 	}
 	catch( ... )
 	{
