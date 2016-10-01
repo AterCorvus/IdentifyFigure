@@ -11,6 +11,48 @@
 
 #define Matrix vector<vector<char>>
 
+// Struct Coordinate
+
+bool operator==( Coordinate & first_coord, Coordinate & second_coord )
+{
+	if( ( first_coord.columnNumber == second_coord.columnNumber ) && ( first_coord.lineNumber == second_coord.lineNumber ) )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool operator!=( Coordinate & first_coord, Coordinate & second_coord )
+{
+	return !( first_coord == second_coord );
+}
+
+// struct Coordinate
+
+// Class Line
+
+Line::Line( const Coordinate& line_begins, const int& line_size )
+	: lineBegins( line_begins ), lineSize( line_size )
+{
+}
+
+Coordinate Line::GetLineBegins()
+{
+	return lineBegins;
+}
+
+int Line::GetLineSize()
+{
+	return lineSize;
+}
+
+// class Line
+
+// Class Figure
+
 // Читаем файл по указанному пути
 Matrix ReadFile( const string& file_path )
 {
@@ -121,7 +163,7 @@ bool IsSquare( vector<Line>& figure )
 }
 
 // Получить позицию центральной точки линии, с округлением в большую сторону
-int GetLineMiddle( Line& line )
+int CalculateLineMiddle( Line& line )
 {
 	Coordinate first_line_begins = line.GetLineBegins();
 	return first_line_begins.columnNumber + ceill( ( line.GetLineSize() / 2 ) - 1 );
@@ -132,7 +174,7 @@ bool IsCircle( vector<Line>& figure )
 {
 	const int line_numb = figure.size();
 	const int half_line_numb = ceill( line_numb / 2 );
-	const int middle_colum = GetLineMiddle( figure[0] );
+	const int middle_colum = CalculateLineMiddle( figure[0] );
 	int longest_line = 0;
 	int area = 0;
 	for( int count = 0; count <= half_line_numb; ++count )
@@ -145,7 +187,7 @@ bool IsCircle( vector<Line>& figure )
 			return false;
 
 		// Проверяем, что линия находится в центре фигуры
-		const int line_middle_column_from_beg = GetLineMiddle( figure[count] );
+		const int line_middle_column_from_beg = CalculateLineMiddle( figure[count] );
 		if( line_middle_column_from_beg != middle_colum )
 			return false;
 
@@ -154,7 +196,7 @@ bool IsCircle( vector<Line>& figure )
 			return false;
 
 		// Обрабатываем линию с конца
-		const int line_middle_loumn_from_end = GetLineMiddle( figure[line_numb - count - 1] );
+		const int line_middle_loumn_from_end = CalculateLineMiddle( figure[line_numb - count - 1] );
 
 		// Проверяем, что линия находится в центре фигуры
 		if( line_middle_loumn_from_end != middle_colum )
@@ -185,6 +227,28 @@ bool IsCircle( vector<Line>& figure )
 	return true;
 }
 
+// Создать квадрат
+shared_ptr<Figure> CreateSquare( vector<Line> figure )
+{
+	Coordinate upper_left_corner( figure[0].GetLineBegins() );
+	const int side_length = figure.size();
+	shared_ptr<Figure> square_ptr = new Square( upper_left_corner, side_length );
+	return square_ptr;
+}
+
+// Создать круг
+shared_ptr<Figure> CreateCIrcle( vector<Line> figure )
+{
+	const int center_line = ceil( figure.size() / 2 );
+	const int center_column = CalculateLineMiddle( figure[center_line] );
+	Coordinate centre_coord;
+	centre_coord.lineNumber = center_line;
+	centre_coord.columnNumber = center_column;
+	const int diameter = figure.size();
+	shared_ptr<Figure> circle_ptr = new Circle( centre_coord, diameter );
+	return circle_ptr;
+}
+
 // Идентифицируем фугуру по изображения
 shared_ptr<Figure> IdentifyFigure( Matrix& picture )
 {
@@ -194,14 +258,14 @@ shared_ptr<Figure> IdentifyFigure( Matrix& picture )
 	if( size < 5 || size > 10 )
 		return nullptr;
 
-	if( IsSquare )
+	if( IsSquare( figure ) )
 	{
-		figure_ptr = new Sqare( figure );
+		figure_ptr = CreateSquare( figure );
 		return figure_ptr;
 	}
-	else if( IsCircle )
+	else if( IsCircle( figure ) )
 	{
-		figure_ptr = new Circle( figure );
+		figure_ptr = CreateCIrcle( figure );
 		return figure_ptr;
 	}
 	else
@@ -221,27 +285,11 @@ int main()
 		shared_ptr<Figure> figure = IdentifyFigure( picture );
 		if( figure != nullptr )
 		{
-			FigureType figure_type = figure->GetType();
-			switch ( figure_type )
-			{
-				case FT_SQARE:
-				{
-					break;
-				}
-				case FT_CIRCLE:
-				{
-					break;
-				}
-				default:
-				{
-					cout << "Неизвестная фигура";
-					break;
-				}
-			}
+			figure->DisplayFigureInf();
 		}
 		else
 		{
-			cout << "Неизвестная фигура."
+			cout << "Неизвестная фигура.";
 		}
 	}
 	catch( ... )
