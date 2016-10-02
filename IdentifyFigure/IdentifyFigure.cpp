@@ -13,7 +13,7 @@
 
 // Struct Coordinate
 
-bool operator==( Coordinate & first_coord, Coordinate & second_coord )
+bool operator==( Coordinate& first_coord, Coordinate& second_coord )
 {
 	if( ( first_coord.columnNumber == second_coord.columnNumber ) && ( first_coord.lineNumber == second_coord.lineNumber ) )
 	{
@@ -25,7 +25,7 @@ bool operator==( Coordinate & first_coord, Coordinate & second_coord )
 	}
 }
 
-bool operator!=( Coordinate & first_coord, Coordinate & second_coord )
+bool operator!=( Coordinate& first_coord, Coordinate & second_coord )
 {
 	return !( first_coord == second_coord );
 }
@@ -52,6 +52,48 @@ int Line::GetLineSize()
 // class Line
 
 // Class Figure
+
+Figure::Figure( const FigureType& figure_type )
+	: figureType( figure_type )
+{
+}
+
+FigureType Figure::GetType()
+{
+	return figureType;
+}
+
+// class Figure
+
+// Class Square
+
+Square::Square( const Coordinate& upper_left_corner, const int& side_length )
+	: upperLeftCorner( upper_left_corner ), sideLength( side_length ), Figure( FT_SQARE )
+{
+}
+
+void Square::DisplayFigureInf()
+{
+	cout << "Квадрат, длинна стороны - " << sideLength << "; координты левого верхнего угла строка - " << upperLeftCorner.lineNumber 
+		  << ", стольбец - " << upperLeftCorner.columnNumber << "." ;
+}
+
+// class Square
+
+// Class Circle
+
+Circle::Circle( const Coordinate& centre_coord, const int& diameter )
+	: centreCoord( centre_coord ) , diametrCircle( diameter ), Figure( FT_CIRCLE )
+{
+}
+
+void Circle::DisplayFigureInf()
+{
+	cout << "Круг, диаметр - " << diametrCircle << "; координаты центра строка - " <<  centreCoord.lineNumber << ", столбец - "
+		  << centreCoord.columnNumber << ".";
+}
+
+// class circle
 
 // Читаем файл по указанному пути
 Matrix ReadFile( const string& file_path )
@@ -145,7 +187,7 @@ bool IsSquare( vector<Line>& figure )
 	int size = figure.size();
 	for( vector<Line>::iterator line_it = figure.begin(); line_it != figure.end(); ++line_it )
 	{
-		const int line_size = line_it->GetLineSize;
+		const int line_size = line_it->GetLineSize();
 		if( line_size > 5 || line_size < 10 )
 			return false;
 
@@ -183,7 +225,7 @@ bool IsCircle( vector<Line>& figure )
 		const int line_size = figure[count].GetLineSize();
 
 		// Проверяем симетричность линий с начала и конца
-		if( line_size != figure[line_numb - count - 1].GetLineSize(); )
+		if( line_size != figure[line_numb - count - 1].GetLineSize() )
 			return false;
 
 		// Проверяем, что линия находится в центре фигуры
@@ -232,7 +274,7 @@ shared_ptr<Figure> CreateSquare( vector<Line> figure )
 {
 	Coordinate upper_left_corner( figure[0].GetLineBegins() );
 	const int side_length = figure.size();
-	shared_ptr<Figure> square_ptr = new Square( upper_left_corner, side_length );
+	shared_ptr<Figure> square_ptr( new Square( upper_left_corner, side_length ));
 	return square_ptr;
 }
 
@@ -245,7 +287,7 @@ shared_ptr<Figure> CreateCIrcle( vector<Line> figure )
 	centre_coord.lineNumber = center_line;
 	centre_coord.columnNumber = center_column;
 	const int diameter = figure.size();
-	shared_ptr<Figure> circle_ptr = new Circle( centre_coord, diameter );
+	shared_ptr<Figure> circle_ptr( new Circle( centre_coord, diameter ) );
 	return circle_ptr;
 }
 

@@ -37,7 +37,7 @@ class Line
 
 						 Line();
 						 Line( const Line& );
-				Line   operator=( const Line& );
+				Line&  operator=( const Line& );
 };
 
 // Тип фигуры
@@ -54,12 +54,17 @@ class Figure
 	public:
 									// Получить тип фигуры 
 				  FigureType   GetType();
-									// Отобразить в командной строке приложения иформацию офигуре
+									// Отобразить в командной строке приложения иформацию о фигуре
 				virtual void   DisplayFigureInf();
-		
+
+	protected:
+									// Тип фигуры
+				  FigureType   figureType;
+
+									Figure( const FigureType& figure_type );
+
 	private:
-						
-								   Figure();
+									Figure();
 		  						   Figure( const Figure& );
 					   Figure&  operator=( const Figure& );
 };
@@ -67,7 +72,7 @@ class Figure
 class Square : public Figure
 {
 	public:
-	  					  Square( const int& upper_left_corner, const int& side_length );
+	  					  Square( const Coordinate& upper_left_corner, const int& side_length );
 
 						  // см. MyParent
 				 void   DisplayFigureInf();
@@ -82,7 +87,7 @@ class Square : public Figure
 class Circle : public Figure
 {
 	public:
-						 Circle( Coordinate& centre_coord, const int& diameter );
+						 Circle( const Coordinate& centre_coord, const int& diameter );
 
 						 // см. MyParent
 				void   DisplayFigureInf();
@@ -91,5 +96,5 @@ class Circle : public Figure
 						 // Координата центра
 		Coordinate   centreCoord;
 						 // Диаметр круга
-				 int   diametrCircl;
+				 int   diametrCircle;
 };
