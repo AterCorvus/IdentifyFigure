@@ -13,31 +13,31 @@ struct Coordinate
 };
 
 // Определение равенства двух координат
-bool operator==( Coordinate const & first_coord, Coordinate const & second_coord );
+bool operator==( Coordinate & first_coord, Coordinate & second_coord );
 
 // Определение неравенства двух координат
-bool operator!=( Coordinate const & first_coord, Coordinate const & second_coord );
+bool operator!=( Coordinate & first_coord, Coordinate & second_coord );
 
 // Горизонтальная линия изображения (фигуры)
 class Line
 {
 	public:
-						 Line( const Coordinate& line_begins, const int& line_size );
+								 Line( Coordinate& line_begins, const int& line_size );
+								 Line( const Line& line );
 
-						 // Получить координату начала линии
-		Coordinate   GetLineBegins();
-						 // Получить длинну линии
-				 int   GetLineSize();
+								 // Получить координату начала линии
+		const Coordinate   GetLineBegins();
+								 // Получить длинну линии
+		const			 int   GetLineSize();
 
 	private:
-						 // Координата начала линии
-		Coordinate   lineBegins;
-						 // Длинна линии
-				 int   lineSize;
+								 // Координата начала линии
+				Coordinate   lineBegins;
+								 // Длинна линии
+						 int   lineSize;
 
-						 Line();
-						 Line( const Line& );
-				Line&  operator=( const Line& );
+								 Line();
+						Line&  operator=( const Line& );
 };
 
 // Тип фигуры
@@ -55,7 +55,7 @@ class Figure
 									// Получить тип фигуры 
 				  FigureType   GetType();
 									// Отобразить в командной строке приложения иформацию о фигуре
-				virtual void   DisplayFigureInf();
+		virtual		  void   DisplayFigureInf();
 
 	protected:
 									// Тип фигуры
@@ -72,7 +72,7 @@ class Figure
 class Square : public Figure
 {
 	public:
-	  					  Square( const Coordinate& upper_left_corner, const int& side_length );
+	  					  Square( Coordinate& upper_left_corner, const int& side_length );
 
 						  // см. MyParent
 				 void   DisplayFigureInf();
@@ -87,7 +87,7 @@ class Square : public Figure
 class Circle : public Figure
 {
 	public:
-						 Circle( const Coordinate& centre_coord, const int& diameter );
+						 Circle( Coordinate& centre_coord, const int& diameter );
 
 						 // см. MyParent
 				void   DisplayFigureInf();

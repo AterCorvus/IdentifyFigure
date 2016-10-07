@@ -34,17 +34,22 @@ bool operator!=( Coordinate& first_coord, Coordinate & second_coord )
 
 // Class Line
 
-Line::Line( const Coordinate& line_begins, const int& line_size )
+Line::Line( Coordinate& line_begins, const int& line_size )
 	: lineBegins( line_begins ), lineSize( line_size )
 {
 }
 
-Coordinate Line::GetLineBegins()
+Line::Line( const Line& line )
+	: lineBegins( line.lineBegins ), lineSize( line.lineSize )
+{
+}
+
+const Coordinate Line::GetLineBegins()
 {
 	return lineBegins;
 }
 
-int Line::GetLineSize()
+const int Line::GetLineSize()
 {
 	return lineSize;
 }
@@ -63,11 +68,16 @@ FigureType Figure::GetType()
 	return figureType;
 }
 
+void Figure::DisplayFigureInf()
+{
+	system( "pause" );
+}
+
 // class Figure
 
 // Class Square
 
-Square::Square( const Coordinate& upper_left_corner, const int& side_length )
+Square::Square( Coordinate& upper_left_corner, const int& side_length )
 	: upperLeftCorner( upper_left_corner ), sideLength( side_length ), Figure( FT_SQARE )
 {
 }
@@ -75,14 +85,16 @@ Square::Square( const Coordinate& upper_left_corner, const int& side_length )
 void Square::DisplayFigureInf()
 {
 	cout << "Квадрат, длинна стороны - " << sideLength << "; координты левого верхнего угла строка - " << upperLeftCorner.lineNumber 
-		  << ", стольбец - " << upperLeftCorner.columnNumber << "." ;
+		  << ", стольбец - " << upperLeftCorner.columnNumber << "." << endl;
+
+	Figure::DisplayFigureInf();
 }
 
 // class Square
 
 // Class Circle
 
-Circle::Circle( const Coordinate& centre_coord, const int& diameter )
+Circle::Circle( Coordinate& centre_coord, const int& diameter )
 	: centreCoord( centre_coord ) , diametrCircle( diameter ), Figure( FT_CIRCLE )
 {
 }
@@ -90,7 +102,9 @@ Circle::Circle( const Coordinate& centre_coord, const int& diameter )
 void Circle::DisplayFigureInf()
 {
 	cout << "Круг, диаметр - " << diametrCircle << "; координаты центра строка - " <<  centreCoord.lineNumber << ", столбец - "
-		  << centreCoord.columnNumber << ".";
+		  << centreCoord.columnNumber << "." << endl;
+
+	Figure::DisplayFigureInf();
 }
 
 // class circle
@@ -135,6 +149,7 @@ Matrix ReadFile( const string& file_path )
 		{
 			// строку в матрицу
 			matrix.push_back( vector );
+			vector.clear();
 		}
 	}
 	
@@ -183,22 +198,22 @@ vector<Line> FindLines( Matrix& picture )
 // Проверяем не квадрат ли это
 bool IsSquare( vector<Line>& figure )
 {
-	int count = 0;
-	int size = figure.size();
+	const int height = figure.size();
+	const int line_begins = figure[0].GetLineBegins().columnNumber;
 	for( vector<Line>::iterator line_it = figure.begin(); line_it != figure.end(); ++line_it )
 	{
 		const int line_size = line_it->GetLineSize();
-		if( line_size > 5 || line_size < 10 )
+		if( line_size < 5 || line_size > 10 )
 			return false;
 
 		if( line_it != figure.begin() )
 		{
-			if( ( line_it->GetLineBegins() != figure[count - 1].GetLineBegins() ) || ( line_size != figure[count - 1].GetLineSize() ) )
+			// Проверяем, что точка начала строки находится в том-же столлбце и размер строк одинаковый
+			if( ( line_it->GetLineBegins().columnNumber != line_begins ) || ( line_size != height ) )
 			{
 				return false;
 			}
 		}
-		++count;
 	}
 
 	return true;
@@ -208,18 +223,18 @@ bool IsSquare( vector<Line>& figure )
 int CalculateLineMiddle( Line& line )
 {
 	Coordinate first_line_begins = line.GetLineBegins();
-	return first_line_begins.columnNumber + ceill( ( line.GetLineSize() / 2 ) - 1 );
+	return static_cast<int>( first_line_begins.columnNumber + ceill( ( line.GetLineSize() / 2 ) - 1 ) );
 }
 
 // Проверяем не круг ли это
 bool IsCircle( vector<Line>& figure )
 {
 	const int line_numb = figure.size();
-	const int half_line_numb = ceill( line_numb / 2 );
+	const int half_line_numb = static_cast<int>( ceill( line_numb / 2 ) );
 	const int middle_colum = CalculateLineMiddle( figure[0] );
 	int longest_line = 0;
 	int area = 0;
-	for( int count = 0; count <= half_line_numb; ++count )
+	for( int count = 0; count <= half_line_numb - 1; ++count )
 	{
 		// Обрабатываем линию с начала
 		const int line_size = figure[count].GetLineSize();
@@ -233,8 +248,8 @@ bool IsCircle( vector<Line>& figure )
 		if( line_middle_column_from_beg != middle_colum )
 			return false;
 
-		// Проверяем, что линия больше или равна следующей
-		if( line_size >= figure[count + 1].GetLineSize() )
+		// Проверяем, что линия не больше следующей
+		if( line_size > figure[count + 1].GetLineSize() )
 			return false;
 
 		// Обрабатываем линию с конца
@@ -244,8 +259,8 @@ bool IsCircle( vector<Line>& figure )
 		if( line_middle_loumn_from_end != middle_colum )
 			return false;
 
-		// Проверяем, что ли меньше или равна предыдущей
-	   if( line_size <= figure[line_numb - count - 2].GetLineSize() )
+		// Проверяем, что линия не больше предыдущей
+	   if( line_size > figure[line_numb - count - 2].GetLineSize() )
 			return false;
 
 		// Ищем самую длинную линию
@@ -281,7 +296,8 @@ shared_ptr<Figure> CreateSquare( vector<Line> figure )
 // Создать круг
 shared_ptr<Figure> CreateCIrcle( vector<Line> figure )
 {
-	const int center_line = ceil( figure.size() / 2 );
+	
+	const int center_line = static_cast<int>( ceil( figure.size() / 2 ) );
 	const int center_column = CalculateLineMiddle( figure[center_line] );
 	Coordinate centre_coord;
 	centre_coord.lineNumber = center_line;
@@ -318,8 +334,10 @@ shared_ptr<Figure> IdentifyFigure( Matrix& picture )
 
 int main()
 {
+	setlocale( LC_ALL, "Russian" );
+
 	string file_path("");
-	cout << "Please enter path to a file" << endl;
+	cout << "Пожалуйста введите путь к файлу." << endl;
 	cin >> file_path;
 	try
 	{
@@ -331,12 +349,14 @@ int main()
 		}
 		else
 		{
-			cout << "Неизвестная фигура.";
+			cout << "Неизветсная фигруа." << endl;
+			system( "pause" );
 		}
 	}
 	catch( ... )
 	{
-		cout << "Призошла неизвестная ошибка";
+		cout << "Призошла неизвестная ошибка" << endl;
+		system( "pause" );
 	}
 
    return 0;
