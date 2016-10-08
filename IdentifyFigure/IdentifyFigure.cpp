@@ -222,8 +222,8 @@ bool IsSquare( vector<Line>& figure )
 // ѕолучить позицию центральной точки линии, с округлением в большую сторону
 int CalculateLineMiddle( Line& line )
 {
-	Coordinate first_line_begins = line.GetLineBegins();
-	return static_cast<int>( first_line_begins.columnNumber + ceill( ( line.GetLineSize() / 2 ) - 1 ) );
+	Coordinate line_begins = line.GetLineBegins();
+	return static_cast<int>( line_begins.columnNumber + ceill( ( line.GetLineSize() / 2 ) ) );
 }
 
 // ѕровер€ем не круг ли это
@@ -296,12 +296,10 @@ shared_ptr<Figure> CreateSquare( vector<Line> figure )
 // —оздать круг
 shared_ptr<Figure> CreateCIrcle( vector<Line> figure )
 {
-	
-	const int center_line = static_cast<int>( ceil( figure.size() / 2 ) );
-	const int center_column = CalculateLineMiddle( figure[center_line] );
+	const int figure_center_line = static_cast<int>( ceil( figure.size() / 2 ) );
 	Coordinate centre_coord;
-	centre_coord.lineNumber = center_line;
-	centre_coord.columnNumber = center_column;
+	centre_coord.lineNumber = figure[figure_center_line].GetLineBegins().lineNumber;
+	centre_coord.columnNumber = CalculateLineMiddle( figure[figure_center_line] );
 	const int diameter = figure.size();
 	shared_ptr<Figure> circle_ptr( new Circle( centre_coord, diameter ) );
 	return circle_ptr;
